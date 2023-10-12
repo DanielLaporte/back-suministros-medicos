@@ -23,7 +23,7 @@ const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
 
 const productRoutes = require("./routes/product.routes"); // Asegura que la ruta sea correcta
-app.use("/api/product", productRoutes);
+app.use("/api/products", productRoutes);
 
 
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes

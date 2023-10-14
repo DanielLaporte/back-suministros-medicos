@@ -1,20 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product.js'); // Asegúrate de importar tu modelo de producto
+const Product = require('../models/Product.js');
+const multer = require('multer');
+const upload = require('../config/upload.js'); 
+
+
 
 
 // POST '/NewProducts' para crear un nuevo producto
-router.post('/', (req, res) => {
-  const { name, description, price, category } = req.body;
-  const newProduct = new Product({
+router.post('/', upload.single('image'), (req, res) => {
+  const { name, description, price, category, brand } = req.body;
+
+  console.log("Req.file: ", req.file)
+  Product.create({
     name,
     description,
     price,
     category,
-  });
-
-  newProduct
-    .save()
+    brand,
+    image: req?.file?.path,
+  })
     .then((savedProduct) => {
       res.json(savedProduct);
     })
@@ -23,6 +28,10 @@ router.post('/', (req, res) => {
       res.status(500).json({ error: 'Error al crear el producto' });
     });
 });
+
+
+
+
 
 // GET '/products' para obtener todos los productos
 router.get('/', (req, res) => {

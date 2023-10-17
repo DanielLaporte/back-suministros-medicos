@@ -22,7 +22,14 @@ let productSchema = new Schema({
     type: String,
     required: [true, "Product category is required."],
   },
-
+  promotional: {
+    type: Boolean,
+    default: false, // Puedes establecer un valor por defecto (false para no promocional)
+  },
+  sales: {
+    type: Number,
+    default: 0, // Inicialmente no se han vendido
+  },
   image:{
     type: String,
   }

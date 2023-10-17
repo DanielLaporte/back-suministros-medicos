@@ -9,15 +9,15 @@ const upload = require('../config/upload.js');
 
 // POST '/NewProducts' para crear un nuevo producto
 router.post('/', upload.single('image'), (req, res) => {
-  const { name, description, price, category, brand } = req.body;
+  let { name, description, price, category, brand, promotional, } = req.body;
 
-  console.log("Req.file: ", req.file)
   Product.create({
     name,
     description,
     price,
     category,
     brand,
+    promotional,
     image: req?.file?.path,
   })
     .then((savedProduct) => {
@@ -74,6 +74,24 @@ router.delete('/:id', (req, res) => {
       console.error(error);
       res.status(500).json({ error: 'Error al eliminar el producto' });
     });
+});
+
+router.get('/promotional', async (req, res) => {
+  try {
+    const promotionalProducts = await Product.find({ promotional: true });
+    res.json(promotionalProducts);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener productos en promoción' });
+  }
+});
+
+
+router.get('/:id' , (req, res) => {
+  let id = req.params.id
+  Product.findById(id).then(data=>{
+    res.send(data)
+  })
+
 });
 
 module.exports = router;

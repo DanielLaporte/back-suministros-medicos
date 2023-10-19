@@ -30,6 +30,8 @@ let productSchema = new Schema({
     type: Number,
     default: 0, // Inicialmente no se han vendido
   },
+  favorites: { type: Number, default: 0 },
+  
   image:{
     type: String,
   }

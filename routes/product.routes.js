@@ -3,7 +3,7 @@ const router = express.Router();
 const Product = require('../models/Product.js');
 const multer = require('multer');
 const upload = require('../config/upload.js'); 
-
+const User = require('../models/User.model.js');
 
 
 
@@ -46,9 +46,10 @@ router.get('/', (req, res) => {
 });
 
 
+
 // PUT '/NewProducts/:id' para actualizar un producto por ID
 router.put('/:id', (req, res) => {
-  Product.findByIdAndUpdate(req.params.id, req.body, { new: true })
+  Product.findByIdAndUpdate(req.params.id, req.body)
     .then((updatedProduct) => {
       if (!updatedProduct) {
         return res.status(404).json({ error: 'Producto no encontrado' });
@@ -93,5 +94,56 @@ router.get('/:id' , (req, res) => {
   })
 
 });
+
+const likeProduct = async (req, res) => {
+  try {
+    const { userId } = req.user; // Supongo que tienes la información del usuario en el objeto req.user
+    const { productId } = req.params;
+
+    // Verificar si el usuario ya le dio "Me gusta" a este producto
+    const user = await User.findById(userId);
+    if (user.likedProducts.includes(productId)) {
+      return res.status(400).json({ message: 'Ya le diste "Me gusta" a este producto.' });
+    }
+
+    // Agregar el producto a los "Me gusta" del usuario
+    user.likedProducts.push(productId);
+    await user.save();
+
+    // Incrementar el contador de "Me gusta" del producto
+    const product = await Product.findById(productId);
+    product.likes += 1;
+    await product.save();
+
+    return res.status(200).json({ message: 'Producto añadido a tus favoritos.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al agregar el producto a tus favoritos.' });
+  }
+};
+
+const unlikeProduct = async (req, res) => {
+  try {
+    const { userId } = req.user; // Supongo que tienes la información del usuario en el objeto req.user
+    const { productId } = req.params;
+
+    // Remover el producto de los "Me gusta" del usuario
+    const user = await User.findById(userId);
+    user.likedProducts = user.likedProducts.filter((id) => id.toString() !== productId);
+    await user.save();
+
+    // Decrementar el contador de "Me gusta" del producto
+    const product = await Product.findById(productId);
+    product.likes -= 1;
+    await product.save();
+
+    return res.status(200).json({ message: 'Producto eliminado de tus favoritos.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar el producto de tus favoritos.' });
+  }
+};
+
+router.post('/:Id', likeProduct);
+router.delete('/:Id', unlikeProduct);
+
 
 module.exports = router;

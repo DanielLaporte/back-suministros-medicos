@@ -8,5 +8,5 @@ app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
 
-const cors = require('cors');
-app.use(cors());
+//const cors = require('cors');
+//app.use(cors());

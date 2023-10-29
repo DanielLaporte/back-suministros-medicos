@@ -1,6 +1,5 @@
 const { Schema, model } = require("mongoose");
 
-// TODO: Please make sure you edit the User model to whatever makes sense in this case
 const userSchema = new Schema(
   {
     email: {
@@ -23,13 +22,10 @@ const userSchema = new Schema(
       enum: ["admin", "user"],
       default: "user",
     },
-
     favorites: [{ type: Schema.Types.ObjectId, ref: "Product" }],
-    
+    purchases: [{ type: Schema.Types.ObjectId, ref: "Purchase" }], // Relación con las compras
   },
-
   {
-    // this second object adds extra properties: `createdAt` and `updatedAt`
     timestamps: true,
   }
 );

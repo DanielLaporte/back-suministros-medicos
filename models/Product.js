@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-let productSchema = new Schema({
+const productSchema = new Schema({
   name: {
     type: String,
     required: [true, "Product name is required."],
@@ -24,24 +24,24 @@ let productSchema = new Schema({
   },
   promotional: {
     type: Boolean,
-    default: false, // Puedes establecer un valor por defecto (false para no promocional)
+    default: false,
   },
   sales: {
     type: Number,
-    default: 0, // Inicialmente no se han vendido
+    default: 0,
   },
-  favorites: { type: Number, default: 0 },
-  
-  image:{
+  favorites: {
+    type: Number,
+    default: 0,
+  },
+  image: {
     type: String,
   }
-
 });
 
 const Product = mongoose.model('Product', productSchema);
 
 module.exports = Product;
-
 
 
 

@@ -2,14 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product.js');
 const multer = require('multer');
-const upload = require('../config/upload.js'); 
+const upload = require('../config/upload.js');
 const User = require('../models/User.model.js');
-
-
 
 // POST '/NewProducts' para crear un nuevo producto
 router.post('/', upload.single('image'), (req, res) => {
-  let { name, description, price, category, brand, promotional, } = req.body;
+  let { name, description, price, category, brand, promotional } = req.body;
 
   Product.create({
     name,
@@ -29,10 +27,6 @@ router.post('/', upload.single('image'), (req, res) => {
     });
 });
 
-
-
-
-
 // GET '/products' para obtener todos los productos
 router.get('/', (req, res) => {
   Product.find()
@@ -44,8 +38,6 @@ router.get('/', (req, res) => {
       res.status(500).json({ error: 'Error al obtener los productos' });
     });
 });
-
-
 
 // PUT '/NewProducts/:id' para actualizar un producto por ID
 router.put('/:id', (req, res) => {
@@ -60,7 +52,7 @@ router.put('/:id', (req, res) => {
       console.error(error);
       res.status(500).json({ error: 'Error al actualizar el producto' });
     });
-});
+})
 
 // DELETE '/NewProducts/:id' para eliminar un producto por ID
 router.delete('/:id', (req, res) => {
@@ -71,6 +63,7 @@ router.delete('/:id', (req, res) => {
       }
       res.json({ message: 'Producto eliminado con éxito' });
     })
+    
     .catch((error) => {
       console.error(error);
       res.status(500).json({ error: 'Error al eliminar el producto' });
@@ -86,64 +79,45 @@ router.get('/promotional', async (req, res) => {
   }
 });
 
-
-router.get('/:id' , (req, res) => {
-  let id = req.params.id
-  Product.findById(id).then(data=>{
-    res.send(data)
-  })
-
+router.get('/:id', (req, res) => {
+  let id = req.params.id;
+  Product.findById(id).then(data => {
+    res.send(data);
+  });
 });
 
-const likeProduct = async (req, res) => {
-  try {
-    const { userId } = req.user; // Supongo que tienes la información del usuario en el objeto req.user
-    const { productId } = req.params;
+// POST '/products/purchase/:productId' para que los usuarios marquen un producto como comprado
+router.post('/purchase/:productId', (req, res) => {
+  const productId = req.params.productId;
+  const userId = req.user._id; // Supongo que tienes la información del usuario autenticado en req.user
 
-    // Verificar si el usuario ya le dio "Me gusta" a este producto
-    const user = await User.findById(userId);
-    if (user.likedProducts.includes(productId)) {
-      return res.status(400).json({ message: 'Ya le diste "Me gusta" a este producto.' });
-    }
+  // Verifica si el usuario existe y el producto es válido
+  User.findById(userId)
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+      return Product.findById(productId);
+    })
+    .then((product) => {
+      if (!product) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
 
-    // Agregar el producto a los "Me gusta" del usuario
-    user.likedProducts.push(productId);
-    await user.save();
-
-    // Incrementar el contador de "Me gusta" del producto
-    const product = await Product.findById(productId);
-    product.likes += 1;
-    await product.save();
-
-    return res.status(200).json({ message: 'Producto añadido a tus favoritos.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al agregar el producto a tus favoritos.' });
-  }
-};
-
-const unlikeProduct = async (req, res) => {
-  try {
-    const { userId } = req.user; // Supongo que tienes la información del usuario en el objeto req.user
-    const { productId } = req.params;
-
-    // Remover el producto de los "Me gusta" del usuario
-    const user = await User.findById(userId);
-    user.likedProducts = user.likedProducts.filter((id) => id.toString() !== productId);
-    await user.save();
-
-    // Decrementar el contador de "Me gusta" del producto
-    const product = await Product.findById(productId);
-    product.likes -= 1;
-    await product.save();
-
-    return res.status(200).json({ message: 'Producto eliminado de tus favoritos.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar el producto de tus favoritos.' });
-  }
-};
-
-router.post('/:Id', likeProduct);
-router.delete('/:Id', unlikeProduct);
-
+      // Agrega el producto a la lista de compras del usuario
+      User.findByIdAndUpdate(userId, { $push: { purchasedProducts: productId } })
+        .then(() => {
+          res.json({ message: 'Producto marcado como comprado' });
+        })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).json({ error: 'Error al marcar el producto como comprado' });
+        });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ error: 'Error al procesar la solicitud' });
+    });
+});
 
 module.exports = router;

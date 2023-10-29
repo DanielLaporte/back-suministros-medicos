@@ -30,6 +30,13 @@ app.use("/api/products", productRoutes);
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require("./error-handling")(app);
 
+app.use(function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', 'https://suministrosmedicoslaport.netlify.app');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+  });
+
 
 
 

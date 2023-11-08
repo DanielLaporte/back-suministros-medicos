@@ -23,7 +23,7 @@ const userSchema = new Schema(
       default: "user",
     },
     favorites: [{ type: Schema.Types.ObjectId, ref: "Product" }],
-    purchases: [{ type: Schema.Types.ObjectId, ref: "Purchase" }], // Relación con las compras
+    
   },
   {
     timestamps: true,

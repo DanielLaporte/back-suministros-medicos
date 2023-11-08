@@ -7,7 +7,7 @@ const User = require('../models/User.model.js');
 
 // POST '/NewProducts' para crear un nuevo producto
 router.post('/', upload.single('image'), (req, res) => {
-  let { name, description, price, category, brand, promotional } = req.body;
+  var { name, description, price, category, brand, promotional } = req.body;
 
   Product.create({
     name,
@@ -40,19 +40,39 @@ router.get('/', (req, res) => {
 });
 
 // PUT '/NewProducts/:id' para actualizar un producto por ID
-router.put('/:id', (req, res) => {
-  Product.findByIdAndUpdate(req.params.id, req.body)
-    .then((updatedProduct) => {
-      if (!updatedProduct) {
+router.put('/:id', upload.single('image'), (req, res) => {
+  const { name, description, price, category, brand, promotional } = req.body;
+  let image = req.file ? req.file.path : null; // Verifica si se ha subido una nueva imagen
+
+  // Busca el producto existente en la base de datos para obtener su imagen actual
+  Product.findById(req.params.id)
+    .then((existingProduct) => {
+      if (!existingProduct) {
         return res.status(404).json({ error: 'Producto no encontrado' });
       }
+
+      // Utiliza los campos del producto existente si no se proporcionan nuevos valores
+      const updateData = {
+        name: name || existingProduct.name,
+        description: description || existingProduct.description,
+        price: price || existingProduct.price,
+        category: category || existingProduct.category,
+        brand: brand || existingProduct.brand,
+        promotional: promotional || existingProduct.promotional,
+        image: image || existingProduct.image, // Mantiene la imagen existente si no se proporciona una nueva
+      };
+
+      // Actualiza el producto en la base de datos
+      return Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    })
+    .then((updatedProduct) => {
       res.json(updatedProduct);
     })
     .catch((error) => {
       console.error(error);
       res.status(500).json({ error: 'Error al actualizar el producto' });
     });
-})
+});
 
 // DELETE '/NewProducts/:id' para eliminar un producto por ID
 router.delete('/:id', (req, res) => {
@@ -79,6 +99,7 @@ router.get('/promotional', async (req, res) => {
   }
 });
 
+
 router.get('/:id', (req, res) => {
   let id = req.params.id;
   Product.findById(id).then(data => {
@@ -86,38 +107,33 @@ router.get('/:id', (req, res) => {
   });
 });
 
-// POST '/products/purchase/:productId' para que los usuarios marquen un producto como comprado
-router.post('/purchase/:productId', (req, res) => {
-  const productId = req.params.productId;
-  const userId = req.user._id; // Supongo que tienes la información del usuario autenticado en req.user
+router.put('/:id/favorites', async (req, res) => {
+  try {
+    // Verifica si el usuario está autenticado (debes implementar la autenticación)
+    
 
-  // Verifica si el usuario existe y el producto es válido
-  User.findById(userId)
-    .then((user) => {
-      if (!user) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-      return Product.findById(productId);
-    })
-    .then((product) => {
-      if (!product) {
-        return res.status(404).json({ error: 'Producto no encontrado' });
-      }
+    // Busca el producto por su ID
+    const product = await Product.findById(req.params.id);
 
-      // Agrega el producto a la lista de compras del usuario
-      User.findByIdAndUpdate(userId, { $push: { purchasedProducts: productId } })
-        .then(() => {
-          res.json({ message: 'Producto marcado como comprado' });
-        })
-        .catch((error) => {
-          console.error(error);
-          res.status(500).json({ error: 'Error al marcar el producto como comprado' });
-        });
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).json({ error: 'Error al procesar la solicitud' });
-    });
+    if (!product) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    // Actualiza el contador de "Me Gusta" en el producto
+    product.favorites += 1;
+    const updatedProduct = await product.save();
+
+    // Registra el "Me Gusta" en el usuario (debes implementar cómo se guarda en el usuario)
+    // Por ejemplo, si tienes un campo `likedProducts` en el modelo del usuario, puedes hacer esto:
+    req.user.likedProducts.push(product._id);
+    await req.user.save();
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al dar "Me Gusta" al producto' });
+  }
 });
+  
 
 module.exports = router;

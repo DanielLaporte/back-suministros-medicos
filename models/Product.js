@@ -26,10 +26,7 @@ const productSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  sales: {
-    type: Number,
-    default: 0,
-  },
+  
   favorites: {
     type: Number,
     default: 0,

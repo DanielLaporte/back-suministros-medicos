@@ -125,7 +125,7 @@ router.put('/:id/favorites', async (req, res) => {
 
     // Registra el "Me Gusta" en el usuario (debes implementar cómo se guarda en el usuario)
     // Por ejemplo, si tienes un campo `likedProducts` en el modelo del usuario, puedes hacer esto:
-    req.user.likedProducts.push(product._id);
+    req.user.favorites.push(product._id);
     await req.user.save();
 
     res.json(updatedProduct);
